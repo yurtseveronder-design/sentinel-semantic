@@ -1,20 +1,34 @@
-[tool.poetry]
-name = "sentinel-semantic"
-version = "0.1.0"
-description = "Semantic router and metadata extraction gateway for AI security and RAG applications."
-authors = ["Your Name <you@example.com>"]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-fastapi = "^0.110.0"
-uvicorn = "^0.28.0"
-pydantic = "^2.6.0"
-sentence-transformers = "^2.5.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.0.0"
-httpx = "^0.27.0"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentinel-semantic"
+version = "0.2.0"
+description = "Semantic router and metadata extraction service for AI-security and RAG applications."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Onder Yurtsever" }]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.100",
+    "uvicorn>=0.22",
+    "pydantic>=2.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+embeddings = ["sentence-transformers>=2.5"]
+dev = ["pytest>=7.0", "httpx>=0.24"]
+
+[project.scripts]
+sentinel-semantic = "sentinel_semantic.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+sentinel_semantic = ["intents.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
