@@ -48,6 +48,11 @@ class SemanticRouter:
         self.jailbreak_patterns = [re.compile(p, re.IGNORECASE) for p in self.config.get("jailbreak_patterns", [])]
         self.confidence_threshold = float(self.config.get("confidence_threshold", 0.60))
         self.CONFIDENCE_THRESHOLD = self.confidence_threshold  # kept for backward compatibility
+        # The jailbreak decision has its own threshold (SEMANTIC_JAILBREAK_THRESHOLD) so it can be tuned
+        # against a benchmark without moving the other intents.
+        self.jailbreak_threshold = float(
+            os.getenv("SEMANTIC_JAILBREAK_THRESHOLD") or self.config.get("jailbreak_threshold", self.confidence_threshold)
+        )
 
         requested = (engine or os.getenv("SEMANTIC_ENGINE", "auto")).lower()
         if requested not in {"auto", "keyword", "embedding"}:
@@ -111,7 +116,7 @@ class SemanticRouter:
         detected = [intent for intent, score in scores.items() if score >= self.confidence_threshold]
 
         pattern_hit = any(p.search(prompt) for p in self.jailbreak_patterns)
-        if pattern_hit or "potential_jailbreak" in detected:
+        if pattern_hit or scores.get("potential_jailbreak", 0.0) >= self.jailbreak_threshold:
             tags.append("SECURITY_BYPASS_ATTEMPT")
             scores["potential_jailbreak"] = max(scores.get("potential_jailbreak", 0.0), 0.95 if pattern_hit else 0.0)
             return RouteResult(

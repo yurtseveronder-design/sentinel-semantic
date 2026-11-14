@@ -17,7 +17,7 @@ It is one part of the stack: [ai-sentinel](https://github.com/yurtseveronder-des
 | Engine | Needs | Behaviour |
 | --- | --- | --- |
 | `keyword` (default when `sentence-transformers` is absent) | nothing | Deterministic: keywords and jailbreak regexes from `intents.yaml` |
-| `embedding` | `pip install ".[embeddings]"` | Cosine similarity against the anchor sentences in `intents.yaml` (English and Turkish) |
+| `embedding` | `pip install ".[embeddings]"` | Cosine similarity against the anchor sentences in `intents.yaml` (English, Turkish and ~10 other languages for jailbreak attempts) |
 
 `SEMANTIC_ENGINE=auto|keyword|embedding` selects the engine; `auto` uses embeddings when they load and falls back to keywords otherwise. Jailbreak regexes apply in both engines. `GET /health` reports which engine is running.
 
@@ -63,6 +63,7 @@ curl -s -X POST http://127.0.0.1:8100/api/v1/semantic/route \
 | `SEMANTIC_API_KEY` | unset (open, with a startup warning) | Require this key on `/api/v1/*` |
 | `SEMANTIC_CORS_ORIGINS` | none | Comma-separated browser origins allowed to call the API; no wildcard |
 | `SEMANTIC_ENGINE` | `auto` | `auto`, `keyword` or `embedding` |
+| `SEMANTIC_JAILBREAK_THRESHOLD` | `0.60` | Similarity at or above which a prompt is classed as a jailbreak (embedding engine). Tune with sentinel-eval |
 | `SEMANTIC_MODEL_NAME` | `all-MiniLM-L6-v2` | Sentence-transformers model for the embedding engine |
 | `SEMANTIC_INTENTS_PATH` | bundled `intents.yaml` | Use your own intents, keywords and jailbreak patterns |
 
