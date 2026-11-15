@@ -3,7 +3,7 @@
 Training data: the public Hugging Face dataset `deepset/prompt-injections` (text, label 0/1).
 Evaluation: sentinel-eval's blind set (data/blind.jsonl), which is NEVER used for training or tuning.
 
-    pip install "transformers>=4.40" torch datasets accelerate
+    pip install "transformers>=4.46" torch datasets accelerate
     python training/finetune.py --blind ../sentinel-eval/data/blind.jsonl --out model_out
 
 Prints catch rate (attacks flagged) and false-block rate (benign flagged) at several thresholds, so the
@@ -52,7 +52,7 @@ def main():
         args=TrainingArguments(output_dir=args.out, num_train_epochs=args.epochs, learning_rate=args.lr,
                                per_device_train_batch_size=16, save_strategy="no", report_to=[],
                                logging_steps=20),
-        train_dataset=train, tokenizer=tok)
+        train_dataset=train, processing_class=tok)
     trainer.train()
     trainer.save_model(args.out)
     tok.save_pretrained(args.out)
