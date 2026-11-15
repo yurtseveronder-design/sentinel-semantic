@@ -76,3 +76,16 @@ ai-sentinel calls `/api/v1/semantic/analyze` when `SENTINEL_SEMANTIC_URL` is set
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Training your own classifier
+
+`training/finetune.py` (run it with the manual `finetune` workflow) fine-tunes `distilbert-base-multilingual-cased` on the public `deepset/prompt-injections` set and scores it on sentinel-eval's blind set, which is never trained on.
+
+Measured 2026-11-15 on the 55-prompt blind set (30 attacks, 25 benign), CPU, 4 epochs:
+
+| Threshold | Catch rate | False-block rate |
+|---|---|---|
+| 0.50 | 80.0% | 24.0% |
+| 0.90 | 80.0% | 16.0% |
+
+This is **not** better than the default `protectai/deberta-v3-base-prompt-injection-v2` (73.3% catch, 8.0% false-block). It catches slightly more but blocks far more benign prompts, because the training set is small (about 500 rows). Treat it as a working pipeline to build on with a larger, better-labelled dataset, not a replacement. The sample is small, so differences of a few points are noise.
