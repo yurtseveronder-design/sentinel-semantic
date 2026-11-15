@@ -79,13 +79,15 @@ MIT. See [LICENSE](LICENSE).
 
 ## Training your own classifier
 
-`training/finetune.py` (run it with the manual `finetune` workflow) fine-tunes `distilbert-base-multilingual-cased` on the public `deepset/prompt-injections` set and scores it on sentinel-eval's blind set, which is never trained on.
+`training/build_dataset.py` merges four public Hugging Face datasets (deepset/prompt-injections, xTRam1/safe-guard-prompt-injection, jackhhao/jailbreak-classification and a sample of databricks-dolly-15k as everyday prompts), removes duplicates, and drops anything that also appears in sentinel-eval's sets. `training/finetune.py` (manual `finetune` workflow) trains `distilbert-base-multilingual-cased` on 6,000 of those rows, picks its decision threshold on a held-back validation split (never on an eval set), and reports on sentinel-eval's three sets. Check each dataset's licence before redistributing the data or a model.
 
-Measured 2026-11-15 on the 55-prompt blind set (30 attacks, 25 benign), CPU, 4 epochs:
+Measured 2026-11-15 (CPU, 2 epochs; 11,781 rows built, 6,000 used):
 
-| Threshold | Catch rate | False-block rate |
-|---|---|---|
-| 0.50 | 80.0% | 24.0% |
-| 0.90 | 80.0% | 16.0% |
+| Set | Catch rate | False-block rate | Notes |
+|---|---|---|---|
+| Blind (55) | 73.3% | 4.0% | chosen threshold 0.05 |
+| Blind, threshold 0.50 | 50.0% | 4.0% | |
+| Held-out (66) | 80.6% | 10.0% | |
+| Dev (88) | 87.5% | 7.5% | |
 
-This is **not** better than the default `protectai/deberta-v3-base-prompt-injection-v2` (73.3% catch, 8.0% false-block). It catches slightly more but blocks far more benign prompts, because the training set is small (about 500 rows). Treat it as a working pipeline to build on with a larger, better-labelled dataset, not a replacement. The sample is small, so differences of a few points are noise.
+For comparison, the default `protectai/deberta-v3-base-prompt-injection-v2` scores 73.3% catch / 8.0% false-block on the blind set. So the fine-tuned model matches its catch rate with half the false blocks on this small set, and is a clear step up from the first 500-row attempt (80% / 16-24%). It is **not** a decisive win: the sets are small (a difference of one or two prompts moves a figure by 2-4 points), and the near-perfect validation score (98% catch, 0.8% false-block) against the much lower eval-set scores shows the public training data is easier than real traffic. The very low chosen threshold (0.05) is a symptom of that mismatch. The next gain needs training data that looks like your own traffic, not more public data.
