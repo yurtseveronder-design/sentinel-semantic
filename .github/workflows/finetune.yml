@@ -9,7 +9,7 @@ defaults:
 jobs:
   train:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -21,7 +21,9 @@ jobs:
       - run: |
           pip install --extra-index-url https://download.pytorch.org/whl/cpu torch
           pip install "transformers>=4.46" datasets accelerate
-      - name: Train and evaluate
-        run: python training/finetune.py --blind .eval/data/blind.jsonl --out model_out | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Build the training set (drops anything that also appears in the eval sets)
+        run: python training/build_dataset.py --eval-dir .eval/data --out data/train.jsonl | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Train, choose threshold on validation, evaluate
+        run: python training/finetune.py --train data/train.jsonl --eval-dir .eval/data --out model_out | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
-        with: {name: model, path: model_out}
+        with: {name: model, path: "model_out\ndata/datacard.json"}
