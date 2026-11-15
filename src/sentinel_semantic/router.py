@@ -70,10 +70,34 @@ class SemanticRouter:
                     raise RuntimeError(f"Could not load the embedding model: {exc}") from exc
         elif requested == "embedding":
             raise RuntimeError("engine=embedding requested but sentence-transformers is not installed")
+        self._load_classifier()
 
     @property
     def engine(self) -> str:
-        return "embedding" if self.has_model else "keyword"
+        base = "embedding" if self.has_model else "keyword"
+        return f"{base}+classifier" if self.classifier is not None else base
+
+    def _load_classifier(self) -> None:
+        """Optional trained prompt-injection classifier (SEMANTIC_CLASSIFIER_MODEL, a Hugging Face model id)."""
+        self.classifier = None
+        self.classifier_threshold = float(os.getenv("SEMANTIC_CLASSIFIER_THRESHOLD", "0.50"))
+        model_id = os.getenv("SEMANTIC_CLASSIFIER_MODEL")
+        if not model_id:
+            return
+        try:
+            from transformers import pipeline  # optional dependency: pip install "sentinel-semantic[classifier]"
+            self.classifier = pipeline("text-classification", model=model_id, truncation=True, max_length=512)
+        except Exception as exc:
+            raise RuntimeError(f"Could not load the classifier model '{model_id}': {exc}") from exc
+
+    def injection_probability(self, prompt: str) -> float:
+        """Probability that the prompt is an injection/jailbreak according to the classifier (0 if none loaded)."""
+        if self.classifier is None:
+            return 0.0
+        out = self.classifier(prompt)[0]
+        label = str(out["label"]).upper()
+        positive = any(k in label for k in ("INJECT", "JAILBREAK", "MALICIOUS", "UNSAFE", "LABEL_1"))
+        return float(out["score"]) if positive else 1.0 - float(out["score"])
 
     @staticmethod
     def _load_config(path: Path) -> Dict[str, Any]:
@@ -116,9 +140,12 @@ class SemanticRouter:
         detected = [intent for intent, score in scores.items() if score >= self.confidence_threshold]
 
         pattern_hit = any(p.search(prompt) for p in self.jailbreak_patterns)
-        if pattern_hit or scores.get("potential_jailbreak", 0.0) >= self.jailbreak_threshold:
+        injection = self.injection_probability(prompt)
+        if injection:
+            scores["classifier_injection"] = round(injection, 3)
+        if pattern_hit or injection >= self.classifier_threshold or scores.get("potential_jailbreak", 0.0) >= self.jailbreak_threshold:
             tags.append("SECURITY_BYPASS_ATTEMPT")
-            scores["potential_jailbreak"] = max(scores.get("potential_jailbreak", 0.0), 0.95 if pattern_hit else 0.0)
+            scores["potential_jailbreak"] = max(scores.get("potential_jailbreak", 0.0), 0.95 if pattern_hit else injection)
             return RouteResult(
                 primary_intent="potential_jailbreak",
                 all_intents=["potential_jailbreak"],
