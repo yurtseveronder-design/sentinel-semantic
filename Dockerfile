@@ -5,7 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 ARG EXTRAS=""
 # CLASSIFIER_MODEL: Hugging Face model id to download at BUILD time so the container starts offline and fast.
 ARG CLASSIFIER_MODEL=""
-ENV HF_HOME=/home/sentinel/.cache/huggingface
+ENV HF_HOME=/home/sentinel/.cache/huggingface \
+    SEMANTIC_CLASSIFIER_MODEL=$CLASSIFIER_MODEL
 
 WORKDIR /app
 COPY pyproject.toml README.md LICENSE ./
