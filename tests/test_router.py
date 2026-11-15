@@ -117,3 +117,10 @@ def test_classifier_threshold_is_respected():
 def test_engine_name_reports_the_classifier():
     assert _with_classifier("INJECTION", 0.5).engine == "keyword+classifier"
     assert SemanticRouter(engine="keyword").engine == "keyword"
+
+
+def test_empty_classifier_settings_are_treated_as_unset(monkeypatch):
+    monkeypatch.setenv("SEMANTIC_CLASSIFIER_MODEL", "")
+    monkeypatch.setenv("SEMANTIC_CLASSIFIER_THRESHOLD", "")
+    router = SemanticRouter(engine="keyword")
+    assert router.classifier is None and router.classifier_threshold == 0.5

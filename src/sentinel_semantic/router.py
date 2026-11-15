@@ -80,7 +80,7 @@ class SemanticRouter:
     def _load_classifier(self) -> None:
         """Optional trained prompt-injection classifier (SEMANTIC_CLASSIFIER_MODEL, a Hugging Face model id)."""
         self.classifier = None
-        self.classifier_threshold = float(os.getenv("SEMANTIC_CLASSIFIER_THRESHOLD", "0.50"))
+        self.classifier_threshold = float(os.getenv("SEMANTIC_CLASSIFIER_THRESHOLD") or "0.50")
         model_id = os.getenv("SEMANTIC_CLASSIFIER_MODEL")
         if not model_id:
             return
