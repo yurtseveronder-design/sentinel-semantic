@@ -2,6 +2,10 @@ name: finetune
 # Manual: trains the small classifier on CPU and scores it on sentinel-eval's blind set.
 on: workflow_dispatch
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   train:
     runs-on: ubuntu-latest
@@ -16,7 +20,7 @@ jobs:
         with: {python-version: "3.12"}
       - run: |
           pip install --extra-index-url https://download.pytorch.org/whl/cpu torch
-          pip install "transformers>=4.40" datasets accelerate
+          pip install "transformers>=4.46" datasets accelerate
       - name: Train and evaluate
         run: python training/finetune.py --blind .eval/data/blind.jsonl --out model_out | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
