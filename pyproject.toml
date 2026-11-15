@@ -19,6 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 embeddings = ["sentence-transformers>=2.5"]
+classifier = ["transformers>=4.40", "torch"]
 dev = ["pytest>=7.0", "httpx>=0.24"]
 
 [project.scripts]
