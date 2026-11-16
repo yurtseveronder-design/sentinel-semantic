@@ -1,0 +1,20 @@
+name: release
+# On a v* tag: build, check, and publish to PyPI via trusted publishing (no token stored in GitHub).
+# One-time setup on pypi.org: add a "pending publisher" for project sentinel-semantic with this repository and workflow name "release.yml".
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install build twine && python -m build && twine check dist/*
+      - uses: pypa/gh-action-pypi-publish@release/v1
