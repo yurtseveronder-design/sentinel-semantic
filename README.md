@@ -64,7 +64,7 @@ curl -s -X POST http://127.0.0.1:8100/api/v1/semantic/route \
 | `SEMANTIC_CORS_ORIGINS` | none | Comma-separated browser origins allowed to call the API; no wildcard |
 | `SEMANTIC_ENGINE` | `auto` | `auto`, `keyword` or `embedding` |
 | `SEMANTIC_JAILBREAK_THRESHOLD` | `0.60` | Similarity at or above which a prompt is classed as a jailbreak (embedding engine). Tune with sentinel-eval |
-| `SEMANTIC_CLASSIFIER_MODEL` | unset | Hugging Face id of a trained prompt-injection classifier, for example `protectai/deberta-v3-base-prompt-injection-v2`. Needs `pip install "sentinel-semantic[classifier]"`. Its injection probability is added to the jailbreak decision |
+| `SEMANTIC_CLASSIFIER_MODEL` | unset | Hugging Face id of a trained prompt-injection classifier, for example `protectai/deberta-v3-base-prompt-injection-v2`. Needs the `classifier` extra: use the `latest-classifier` image, or `pip install "sentinel-semantic[classifier] @ git+https://github.com/yurtseveronder-design/sentinel-semantic.git"`. Its injection probability is added to the jailbreak decision |
 | `SEMANTIC_CLASSIFIER_THRESHOLD` | `0.50` | Injection probability at or above which a prompt is treated as a jailbreak |
 | `SEMANTIC_MODEL_NAME` | `all-MiniLM-L6-v2` | Sentence-transformers model for the embedding engine |
 | `SEMANTIC_INTENTS_PATH` | bundled `intents.yaml` | Use your own intents, keywords and jailbreak patterns |
