@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -60,3 +61,51 @@ jobs:
       - run: |
           echo "results: ${{ join(needs.*.result, ' ') }}"
           [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "false" ]
+
+  # Images are pushed only after every job above (tests, wheel build, container start) passed.
+  publish-light:
+    if: github.event_name == 'push'
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions: {contents: read, packages: write}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: {registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}"}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+      - uses: docker/build-push-action@v6
+        with: {context: ., push: true, tags: "${{ steps.meta.outputs.tags }}", labels: "${{ steps.meta.outputs.labels }}"}
+
+  publish-classifier:
+    if: github.event_name == 'push'
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions: {contents: read, packages: write}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: {registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}"}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: suffix=-classifier,onlatest=true
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          build-args: |
+            EXTRAS=classifier
+            CLASSIFIER_MODEL=protectai/deberta-v3-base-prompt-injection-v2
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
