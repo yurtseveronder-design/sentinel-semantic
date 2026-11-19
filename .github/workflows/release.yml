@@ -1,9 +1,9 @@
 name: release
-# On a v* tag: build, check, and publish to PyPI via trusted publishing (no token stored in GitHub).
+# On a pypi-v* tag (for example pypi-v1.2.0; plain v* tags only make a GitHub release and Docker images): build, check, and publish to PyPI via trusted publishing (no token stored in GitHub).
 # One-time setup on pypi.org: add a "pending publisher" for project sentinel-semantic with this repository and workflow name "release.yml".
 on:
   push:
-    tags: ["v*"]
+    tags: ["pypi-v*"]
 
 jobs:
   pypi:
